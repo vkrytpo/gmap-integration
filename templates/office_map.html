@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <link data-require="select2@*" data-semver="3.5.1" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.css" />
+    <link data-require="select2@*" data-semver="3.5.1" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2-bootstrap.css" />
+    <link rel="stylesheet" href="style.css" />
+    <script data-require="jquery@2.1.3" data-semver="2.1.3" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+    <script data-require="select2@*" data-semver="3.5.1" src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.js"></script>
+    <script data-require="lodash.js@*" data-semver="2.4.1" src="http://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.js"></script>
+  </head>
+
+  <body style='color:white;background-color:black;'>
+    <center><h2>Select Service id</h2></center>
+
+
+<div class='row' style='margin:0'>
+<form action='/getoffices' method='GET'>
+ 	<div class='col-md-12' style='padding:10px 10%'>  
+		 <input  type="hidden" {% if q %}{{q}}{% endif%} name ='serviceid'class="js-data-example-ajax form-control" />
+	</div>
+	<div class='col-md-12' style=" margin:auto;padding:0 45%;">
+		<button class='btn'
+			 style="width:100%;background-color:white;border:1px solid black" 
+			type='submit' > 
+			GetOffices </button>
+	</div>
+</form>
+</div>
+<script>
+$(".js-data-example-ajax").select2({
+  ajax: {
+    url: "/getservices",
+    dataType: 'json',
+    delay: 250,
+    data: function (query) {
+      return {
+        query: query
+      };
+    },
+    results: function (data) {
+		return {
+				results: $.map(data, function (item) {
+				    return {
+				        text: item.id,
+				        slug: item.id,
+				        id: item.id
+				    }
+				})
+			    };
+     return data;
+    },
+    cache: true
+  }
+});
+</script>
+{% if ctx %}
+<p id ='location' style=display:none;> {% for loc in ctx %} {{loc.Lat}},{{loc.Lon}}, <>{% endfor %}</p>
+<div id="map" style="width:90%;height:550px;margin:auto"></div>
+
+<script>
+function myMap() { 
+         var myLatLng = {lat: {{ctx.ctx.1.Lat}}, lng: {{ctx.ctx.1.Lon}}};
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 5,
+          center: myLatLng
+        });
+
+       {% for loc in ctx.ctx %} 
+		   var marker = new google.maps.Marker({
+			  position: {lat: {{loc.Lat}}, lng: {{loc.Lon}}},
+			  map: map,
+			  title: 'Name:{{loc.phone}}, Email:{{loc.Email}}, Phone: {{loc.phone}}'
+			});
+			google.maps.event.addListener(marker,'click',function() {
+			  map.setZoom(9);
+			  map.setCenter(marker.getPosition());
+			});
+			google.maps.event.addListener(marker,'click',function() {
+			  var pos = map.getZoom();
+			  map.setZoom(9);
+			  map.setCenter(marker.getPosition());
+			  window.setTimeout(function() {map.setZoom(pos);},3000);
+			});
+			var infowindow = new google.maps.InfoWindow({
+				  content:'Name:{{loc.phone}}, Email:{{loc.Email}}, Phone: {{loc.phone}}'
+				});
+
+			google.maps.event.addListener(marker, 'click', function() {
+				  infowindow.open(map,marker);
+				});
+      {% endfor %}
+}
+</script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCKAWI3af7dkZDrrm-ZBqJqy9WZQELVWTU&callback=myMap"></script>
+{% endif %}
+  </body>
+
+</html>
+
